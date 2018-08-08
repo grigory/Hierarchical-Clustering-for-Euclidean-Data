@@ -1,0 +1,164 @@
+\documentclass{article}
+\usepackage{fullpage,amsthm}
+
+\usepackage{graphicx} % support the \includegraphics command and options
+\usepackage{array} % for better arrays (eg matrices) in maths
+%\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{amsmath, amssymb, color, verbatim}
+\usepackage{hyphenat,epsfig,subfigure,multirow}
+\usepackage{hyperref}
+
+\usepackage{algorithm,algorithmic}
+
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{fact}[theorem]{Fact}
+\newtheorem{conj}[theorem]{Conjecture}
+\newtheorem{definition}{Definition}[section]
+%\theoremstyle{definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\newenvironment{proofof}[1]{\begin{proof}[of {#1}]}{\end{proof}}
+
+\newcommand{\mypar}[1]{\smallskip \noindent {\bf {#1}.}}
+\newcommand{\myparq}[1]{\smallskip \noindent {\bf {#1}}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+%\newenvironment{proof}[1][Proof]{\begin{trivlist}
+%\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+%\newenvironment{definition}[1][Definition]{\begin{trivlist}
+%\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{example}[1][Example]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+% \newenvironment{remark}[1][Remark]{\begin{trivlist}
+% \item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+\renewcommand{\qed}{\nobreak \ifvmode \relax \else
+      \ifdim\lastskip<1.5em \hskip-\lastskip
+      \hskip1.5em plus0em minus0.5em \fi \nobreak
+      \vrule height0.75em width0.5em depth0.25em\fi}
+
+\newcommand{\ie}{{\it i.e.,\ }}
+\newcommand{\eg}{{\it e.g.,\ }}
+\newcommand{\etal}{{\it et al.\,}}
+\newcommand{\through}{,\ldots,}
+\newcommand{\cala}{\mathcal A}
+\newcommand{\calb}{\mathcal B}
+\newcommand{\calgn}{{\mathcal G}_n}
+%\newcommand{\HHH}{\mathcal H}
+%\newcommand{\DDD}{\mathcal D}
+%\newcommand{\XXX}{\mathcal X}
+\newcommand{\cals}{\mathcal S}
+%\newcommand{\RRR}{\mathcal R}
+\newcommand{\eps}{\epsilon}
+\newcommand{\z}{\mathrm{z}}
+\newcommand{\zo}{\{0,1\}}
+\newcommand{\oo}{\{+1,-1\}}
+\newcommand{\inv}{^{-1}}
+\def\E{\mathop{\mathbb{E}}\displaylimits}
+\def\poly{\mathop{\rm{poly}}\nolimits}
+\def\Lap{\mathop{\rm{Lap}}\nolimits}
+\newcommand{\Cauchy}{\operatorname{Cauchy}}
+\newcommand{\inr}{\in_{\mbox{\tiny R}}}
+\newcommand{\cP}{\mathcal P}
+
+\title{Hierarchical Clustering for Euclidean Data}
+\begin{document}
+\maketitle
+The goal of this project is to extend Dasgupta's hierarchical clustering paradigm to Euclidean datasets.
+Recall that in the graphical case given a graph $G(V,E)$ and a tree $\mathcal T$ whose nodes correspond to vertices in the graph Dasgupta's hierarchical clustering cost is defined as follows:
+$$f^-(\mathcal T) = \sum_{(i,j) \in E} w_{ij} |\{x \in T(i,j)\}|,$$
+where $T(i,j)$ is the subtree of $\mathcal T$ rooted in the least common ancestor of $i$ and $j$ in $\mathcal T$.
+Here $w(i,j)$ corresponds to a given similarity measure between vertices $i$ and $j$.
+For the general case the best known approximation is $O(\sqrt{\log |V|})$ using the sparsest cut algorithm. Furthermore, under SSE-conjecture no algorithm can get a constant factor approximation in polynomial time~\cite{CC17}
+
+We also consider a complementary objective which one aims to maximize:
+$$f^+(\mathcal T) = \sum_{(i,j) \in E} w_{ij} (|V| - |\{x \in T(i,j)\}|),$$
+
+
+Consider a set of vectors $v_1, \dots, v_n \in \mathbb R^d$. In this case the similarity measure $w$ only depends on the underlying vectors, i.e. $w_{ij} = f(v_i, v_j)$ for some function $f \colon \mathbb R \times \mathbb R \to [0,1]$.
+\begin{definition}[Monotone distance-based similarity measure]
+A similarity measure $w_{ij} = f(v_i, v_j)$ is \emph{distance-based} if $f(v_i, v_j) = g(\|v_i - v_j\|_2)$ for some function $g \colon \mathbb R \to [0,1]$.
+A similarity measure $w_{ij}$ is \emph{monotone distance-based} if furthermore $g \colon \mathbb R \to [0,1]$ is a monotone non-increasing function.
+\end{definition}
+
+As a specific example of a monotone distance-based similarity measure it is natural to consider the Gaussian kernel similarity, i.e.: 
+$$w_{ij} = (\sqrt{2 \pi} \sigma)^{-n} e^{- \frac{\|v_i - v_j\|_2^2}{2\sigma^2}},$$ 
+where $\sigma$ is a normalization factor. Below we will ignore the multiplicative factor as it doesn't affect multiplicative approximations. We will also set $\sigma = 1/\sqrt{2}$ to simplify the presentation.
+
+\textbf{Question:} Is it possible to get a better approximation and/or faster algorithm for the Hierarchical clustering problem in this setting? Or can hard instances of the general case be embedded into a into vectors with weights from the Gaussian kernel?
+
+\section{Tight cases for Average-Linkage for $f^+$}
+
+\subsection{High-dimensional case}
+For $i \in [n^{2/3}]$ and $j \in [n^{1/3}]$ let $v_{i,j} = \Delta (e_i + (1 + \epsilon)e_{k + j})$ where $k = n^{2/3}$.
+Then it is easy to see that for any fixed $i \in [n^{2/3}]$ and $j_1 \neq j_2 \in [n^{1/3}]$ it holds that:
+$$\|v_{i,j_1} - v_{i, j_2}\|_2^2 = 2 (1 + \epsilon)^2 \Delta^2$$
+For any fixed $j \in [n^{1/3}]$ and $i_1 \neq i_2 \in [n^{2/3}]$ it holds that:
+$$\|v_{i_1, j} - v_{i_2,j}\|_2^2 = 2 \Delta^2.$$
+Otherwise if $i_1 \neq i_2 \in [n^{2/3}]$ and $j_1 \neq j_2  \in [n^{1/3}]$ then:
+$$\|v_{i_1, j_1} - v_{i_2, j_2}\|_2^2 = 2 \Delta^2 + 2 (1 + \epsilon)^2 \Delta^2 \ge 4 \Delta^2.$$
+
+By setting $\Delta^2 > c \log n$ for a sufficiently large constant $c$ the contribution of pairs of vectors with $i_1 \neq i_2$ and $j_1 \neq j_2$ can be made negligible. 
+The rest of the pairs correspond to an embedded hard instance from Charikar, Chatziafratis and Niazadeh (SODA'19 submission) for which average-linkage only achieves a $\frac13$-approximation compared to the optimum.
+
+Using JL-transform we can reduce the dimension required for the above reduction to $d = O(\log n)$.
+
+\subsection{Low-dimensional case}
+
+For $d = 1$ the hardest instance seems to be the following.
+Take four equally spaced points on a line, i.e. $0, \Delta, 2\Delta, 3 \Delta$.
+Then the average-linkage clustering algorithm might first connect the two middle points and then connect the two other points in arbitrary order.
+We denote the cost of this solution as $AVG$.
+An alternative solution would be to create two groups $(0, \Delta)$ and $(2\Delta, 3\Delta)$ and then merge them together.
+We denote the cost of this solution as $OPT$.
+By making $\Delta$ sufficiently large the contribution of pairs at distance more than $\Delta$ from each other can be ignored. We thus have:
+\begin{align*}
+AVG \approx 3 e^{-\Delta^2} \\
+OPT \approx 4 e^{- \Delta^2},
+\end{align*}
+which gives the ratio of $4/3$.
+
+\textbf{Question:} Is the $4/3$ ratio achievable by average-linkage clustering for $d = 1$?
+
+
+\section{Hierarchical Clustering in 1D}
+We first consider the case $d = 1$.
+In this case the input can be represented as points on a line $x_1 \le \dots  \le x_n$.
+
+\subsection{Random Cut}
+Consider the following algorithm: given a range of indices $[l,r]$ pick a uniformly random index $i$ between $l$ and $r - 1$ and split the range into two: $[l, i]$ and $[i + 1, r]$, then continue recursively until the range contains a single point.
+We apply this algorithm to the initial range $[1,n]$ and call it \textsc{Random Cut}.
+
+\begin{theorem}
+For $d = 1$ under any monotone distance-based similarity measure $w_{ij} = g(x_i, x_j)$ the algorithm \textsc{Random Cut} gives a $\frac12$-approximation for the objective $f^+$ in expectation.
+\end{theorem}
+\begin{proof}
+The expected value of $f^+$ for the algorithm \textsc{Random Cut} can be written as:
+$$ALG = \mathbb E\left[\sum_{i = 1}^n \sum_{j = i + 1}^n w_{ij} (n - |\{x \in T(i,j)\}|)\right].$$
+Note that the optimum solution has the following structural property.
+\begin{lemma}
+For $d = 1$ under any monotone distance-based similarity measure the optimum hierarchical clustering $\mathcal T^*$ has the property that for any pair $(i,j)$ where $i < j$ the subtree $T^*(i,j)$ rooted in the least common ancestor of $i$ and $j$ contains all the points in the range $[i,j]$.
+\end{lemma}
+\begin{proof}
+Consider the construction of $\mathcal T^*$ in a top-down fashion where we start with the root and recursively split the tree into subtrees.
+Initially the leaves correspond to individual points which get merged together as we go up the tree.
+Formally, we claim that at any point in this process when $t$ such merges have been performed the already constructed subtrees correspond to a non-overlapping collection of subranges $[i_1^t, j_1^t], \dots, [i_k^t, j_k^t]$. 
+Here $k = n - t$, $i_1^t = 1, j_k^t = n$ and for each index $\ell$ in $[1, k - 1]$ it holds that $i_{\ell + 1}^t = j_\ell^t$. 
+
+In order to show this by induction on the number of merges $t$ we need to show that for every $t$ the sequence of ranges at step $t + 1$ of the bottom up merging process is obtained by merging two adjacent intervals $[i_\ell^t, j_\ell^t]$ and $[i_{\ell + 1}^t, j_{\ell + 1}^t]$ for some $\ell \in [1, k - 1]$.
+\end{proof}
+
+
+
+\end{proof}
+
+
+\bibliographystyle{alpha}
+\bibliography{clustering}
+
+\end{document}
