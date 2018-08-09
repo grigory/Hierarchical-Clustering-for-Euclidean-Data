@@ -1,0 +1,18 @@
+\begin{thebibliography}{Das16}
+
+\bibitem[CC17]{CC17}
+Moses Charikar and Vaggos Chatziafratis.
+\newblock Approximate hierarchical clustering via sparsest cut and spreading
+  metrics.
+\newblock In {\em Proceedings of the Twenty-Eighth Annual {ACM-SIAM} Symposium
+  on Discrete Algorithms, {SODA} 2017, Barcelona, Spain, Hotel Porta Fira,
+  January 16-19}, pages 841--854, 2017.
+
+\bibitem[Das16]{D16}
+Sanjoy Dasgupta.
+\newblock A cost function for similarity-based hierarchical clustering.
+\newblock In {\em Proceedings of the 48th Annual {ACM} {SIGACT} Symposium on
+  Theory of Computing, {STOC} 2016, Cambridge, MA, USA, June 18-21, 2016},
+  pages 118--127, 2016.
+
+\end{thebibliography}

@@ -128,30 +128,129 @@ which gives the ratio of $4/3$.
 
 \section{Hierarchical Clustering in 1D}
 We first consider the case $d = 1$.
-In this case the input can be represented as points on a line $x_1 \le \dots  \le x_n$.
+In this case the input can be represented as points on a line, which we assume to be sorted without loss of generality, i.e. $x_1 \le \dots  \le x_n$.
+
+
+
+\newcommand{\cblue}{\mathcal T^*_{blue}}
+\newcommand{\cred}{\mathcal T^*_{red}}
+\newcommand{\copt}{\mathcal T^*}
+\newcommand{\cprime}{\mathcal T'^*}
+\newcommand{\tblue}{T^*_{blue}}
+\newcommand{\tred}{T^*_{red}}
+\newcommand{\topt}{T^*}
+\newcommand{\tprime}{T'^*}
+
 
 \subsection{Random Cut}
 Consider the following algorithm: given a range of indices $[l,r]$ pick a uniformly random index $i$ between $l$ and $r - 1$ and split the range into two: $[l, i]$ and $[i + 1, r]$, then continue recursively until the range contains a single point.
 We apply this algorithm to the initial range $[1,n]$ and call it \textsc{Random Cut}.
 
-\begin{theorem}
+\begin{theorem}\label{thm:random-cut-analysis}
 For $d = 1$ under any monotone distance-based similarity measure $w_{ij} = g(x_i, x_j)$ the algorithm \textsc{Random Cut} gives a $\frac12$-approximation for the objective $f^+$ in expectation.
 \end{theorem}
 \begin{proof}
 The expected value of $f^+$ for the algorithm \textsc{Random Cut} can be written as:
 $$ALG = \mathbb E\left[\sum_{i = 1}^n \sum_{j = i + 1}^n w_{ij} (n - |\{x \in T(i,j)\}|)\right].$$
-Note that the optimum solution has the following structural property.
-\begin{lemma}
-For $d = 1$ under any monotone distance-based similarity measure the optimum hierarchical clustering $\mathcal T^*$ has the property that for any pair $(i,j)$ where $i < j$ the subtree $T^*(i,j)$ rooted in the least common ancestor of $i$ and $j$ contains all the points in the range $[i,j]$.
+
+The rest of the analysis relies on the following two lemmas. In the first lemma we give an expression for the expected number of leaves in the subtree rooted in the least common ancestor of $i$ and $j$:
+\begin{lemma}\label{lem:rand-expectation}
+The random variable $T(i,j)$ corresponding to the number of leaves in the subtree rooted in the least common ancestor of $i$ and $j$ in the tree produced by the algorithm \textsc{Random Cut} has expectation:
+$$\mathbb E[T(i,j)] = (j - i + 1) + \sum_{k = j + 1}^n \frac{j - i}{k - i} + \sum_{k = 1}^{i - 1} \frac{j - i}{j - k}$$
 \end{lemma}
 \begin{proof}
-Consider the construction of $\mathcal T^*$ in a top-down fashion where we start with the root and recursively split the tree into subtrees.
-Initially the leaves correspond to individual points which get merged together as we go up the tree.
-Formally, we claim that at any point in this process when $t$ such merges have been performed the already constructed subtrees correspond to a non-overlapping collection of subranges $[i_1^t, j_1^t], \dots, [i_k^t, j_k^t]$. 
-Here $k = n - t$, $i_1^t = 1, j_k^t = n$ and for each index $\ell$ in $[1, k - 1]$ it holds that $i_{\ell + 1}^t = j_\ell^t$. 
+We can express $\mathbb E[T(i,j)]$ as follows:
+$$\mathbb E[T_{i,j}] = \sum_{k = 1}^n \ell_k(i,j),$$
+where $\ell_k$ is the probability that point $k$ belongs to the subtree rooted in the least common ancestor of $i$ and $j$.
+The proof of the lemma then follows from the fact that $\ell_k$ can be expressed as:
 
-In order to show this by induction on the number of merges $t$ we need to show that for every $t$ the sequence of ranges at step $t + 1$ of the bottom up merging process is obtained by merging two adjacent intervals $[i_\ell^t, j_\ell^t]$ and $[i_{\ell + 1}^t, j_{\ell + 1}^t]$ for some $\ell \in [1, k - 1]$.
+$$
+\ell_k = 
+\begin{cases}
+\frac{j - i}{j - k} \text{ if } k \le i - 1 \\
+1 \text { if } i \le k \le j \\
+\frac{j - i}{k - i} \text { if } k \ge j + 1.
+\end{cases}
+$$
+Indeed, by construction all points between $i$ and $j$ inclusive always belong to the subtree.
+Consider the case $k \le i - 1$ as the other case is symmetric. Consider the first time the segment $[k,j]$ is partitioned by the algorithm \textsc{Random Cut}.
+Conditioned on $[k,j]$ being cut for the first time with probability $\frac{j - i}{j - k}$ this cut lands between $i$ and $j$ and hence $k$ belongs to the subtree and otherwise it doesn't.
+
 \end{proof}
+
+In the second lemma we give an upper bound on the optimum value of the objective, which we denote as $OPT$.
+\begin{lemma}\label{lem:opt-bound}
+For any monotone distance-based similarity measure $w$ the reward $OPT$ of the optimum solution satisfies the following inequality:
+$$OPT \le \sum_{i = 1}^n \sum_{j = i + 1}^n w_{ij} (n - (j - i + 1)).$$
+\end{lemma}
+\begin{proof}
+Consider any fixed triple of indices $(i,j,k)$ where $i < j < k$.
+In the optimal tree $\mathcal T^*$  consider the least common ancestor $p$ or these three points.
+Note that if we go one level below $p$ in $\mathcal T^*$ at least one of the points in the triple will get separated from the rest. This implies that only one pair in this triple can contribute to the objective and hence:
+$$OPT \le \sum_{i < j < k} \max(w_{ij}, w_{ik}, w_{jk}) \le \sum_{i < j < k} \max(w_{ij}, w_{jk}),$$
+where in the second inequality we use the fact that since $w$ is a monotone distance-based similarity measure it holds that $w_{ij} \ge w_{ik}$ and $w_{jk} \ge w_{ik}$.
+
+We can now divide all $(i,j,k)$ triples into two sets:
+$
+\mathcal S_1 = \{(i < j < k) | w_{ij} \ge w_{jk}\} 
+\mathcal S_2 = \{(i < j < k) | w_{ij} < w_{jk}\} ,
+$
+and hence we have:
+\begin{align*}
+OPT &\le \sum_{(i, j, k) \in \mathcal S_1} w_{ij} + \sum_{(i, j, k) \in \mathcal S_2} w_{jk} = \sum_{(i,j,k) \in \mathcal S_1} w_{ij} + \sum_{(k,i,j) \in \mathcal S_2} w_{ij}  \le \sum_{i < j < k} w_{ij} + \sum_{k < i < j} w_{ij} = \sum_{i < j} w_{ij} (n - (j - i + 1)).
+\end{align*}
+\end{proof}
+
+We are now ready to give the proof of Theorem~\ref{thm:random-cut-analysis}.
+We introduce the following notation for $i <j$: 
+\begin{align*}
+n_{ij} &= n - (j - i + 1) \\
+e_{ij} &= n_{ij} - \sum_{k = j + 1}^n \frac{j - i}{k - i} - \sum_{k = 1}^{i - 1} \frac{j - i}{j - k}
+\end{align*}
+By using Lemma~\ref{lem:rand-expectation} and Lemma~\ref{lem:opt-bound} 
+we have $\mathbb E[f^+(\mathcal T)] = \sum_{i = 1}^n \sum_{j = i + 1}^n w_{ij} e_{ij}$ and $OPT \le \sum_{i = 1}^n \sum_{j = i + 1}^n w_{ij} n_{ij}$.
+Hence it suffices to show that:
+$$\sum_{i = 1}^n \sum_{j = i + 1}^n w_{ij} e_{ij} \ge \frac12 \sum_{i = 1}^n \sum_{j = i + 1}^n w_{ij} n_{ij}.$$
+
+%Note that the optimum solution has the following structural property.
+%\begin{lemma}
+%For $d = 1$ under any monotone distance-based similarity measure the optimum hierarchical clustering $\mathcal T^*$ has the property that for any pair $(i,j)$ where $i < j$ the subtree $T^*(i,j)$ rooted in the least common ancestor of $i$ and $j$ contains all the points in the range $[i,j]$.
+%\end{lemma}
+%\begin{proof}
+%Consider the construction of $\mathcal T^*$ in a top-down fashion where we start with the root and recursively split the tree into subtrees.
+%It is known (see~\cite{D16}) that the optimal clustering corresponds to a binary tree so each split creates two subtrees.
+%We will represent the collection of already formed subtrees as a collection of intervals.
+%
+%Formally, we start with the interval $[1,n]$ and claim that after $t$ splits the already constructed subtrees correspond to a non-overlapping collection of subranges $[i_1^t, j_1^t], \dots, [i_k^t, j_k^t]$. 
+%Here $k = t + 1$, $i_1^t = 1, j_k^t = n$ and for each index $\ell$ in $[1, k - 1]$ it holds that $i_{\ell + 1}^t = j_\ell^t$. 
+%In order to show this claim by induction on the number of splits $t$ we need to show that for every $t$ the sequence of ranges at step $t + 1$ of the top-down splitting process is obtained by splitting one of the intervals $[i_{\ell}^t, j_\ell^t]$ for some $\ell$ into two non-overlapping subintervals.
+%
+%Indeed, assume for the sake of contradiction that this is not the case and some interval $[i_\ell^t, j_\ell^t]$ has been split differently into two arbitrary subsets $\mathcal R$ and $\mathcal B$ which don't correspond to non-overlapping intervals. We will refer to $\mathcal R$ as the set of \emph{red} points and $\mathcal B$ as the set of \emph{blue} points.
+%W.l.o.g we can assume that $i_\ell^t \in \mathcal R$. Hence there must exist an index $r$ such that $r \in \mathcal R$ and $r - 1 \in \mathcal B$ as otherwise $\mathcal R$ and $\mathcal B$ form non-overlapping intervals. 
+%
+%
+%
+%Let $m = |\mathcal R \cup \mathcal B|$. 
+%Consider moving the point $x_{r - 1}$ from $\mathcal R$ to $\mathcal B$. We denote the resulting tree as $\cprime_r$. 
+%Comparing the value of the objective of the resulting tree $f^+(\cblue)$ with the objective of the optimum solution $f^+(\mathcal T^*)$ we have:
+%\begin{align*}
+%&f^+(\mathcal T^*) - f^+(\cblue) = \sum_{i \in [1,n] \setminus \{r - 1\}} w_{i, r - 1}(\tblue(i,r - 1) - T^*(i, r - 1)) \\
+%\end{align*}
+%
+%Consider moving the point $x_r$ to $\mathcal B$ and the point $x_{r - 1}$ to $\mathcal R$ and then applying exactly the same partitioning on the resulting sets.
+%We denote the resulting tree as $\cprime$. 
+%Comparing the value of the objective of the resulting tree $f^+(\cprime)$ with the objective of the optimum solution $f^+(\mathcal T^*)$ we have:
+%\begin{align*}
+%&f^+(\mathcal T^*) - f^+(\cprime) = \sum_{i \in [1,n] \setminus \{r\}} w_{i,r} (T'^*(i,r) - T^*(i,r)) + \sum_{i \in [1,n] \setminus \{r - 1\}} w_{i, r - 1}(T'^*(i,r - 1) - T^*(i, r - 1)) \\
+%& = \sum_{i \in \mathcal B \cup \mathcal R \setminus \{r\}}ß w_{i,r} (T'^*(i,r) - T^*(i,r)) + \sum_{i \in \mathcal B \cup \mathcal R \setminus \{r - 1\}} w_{i, r - 1}(T'^*(i,r - 1) - T^*(i, r - 1)) \\
+%& = \sum_{i \in \mathcal B \cup \mathcal R \setminus \{r\}} w_{i,r} T'^*(i,r) - \sum_{i \in \mathcal B \cup \mathcal R \setminus \{r - 1\}} w_{i, r - 1} T^*(i, r - 1) 
+% + \sum_{i \in \mathcal B \cup \mathcal R \setminus \{r - 1\}} w_{i, r - 1} T'^*(i,r - 1) - \sum_{i \in \mathcal B \cup \mathcal R \setminus \{r\}} w_{i,r} T^*(i, r)  \\
+%&= \sum_{i \in \mathcal R \setminus \{r\}} (w_{i,r} - w_{i, r - 1}) T^*_{i,r} + \sum_{i \in \mathcal B \setminus \{r - 1\}} (w_{i,r} - w_{i, r - 1}) m 
+% + \sum_{i \in \mathcal B \setminus \{r - 1\}} (w_{i,r - 1} - w_{i, r}) T^*_{i,r - 1} + \sum_{i \in \mathcal R \setminus \{r\}} (w_{i,r - 1} - w_{i, r}) m \\
+%& = \sum_{i \in \mathcal R \setminus \{r\}} (w_{i,r} - w_{i, r - 1})  (T^*_{i,r} - m) + \sum_{i \in \mathcal B \setminus \{r - 1\}} (w_{i, r - 1} - w_{i, r})(T^*_{i,r - 1} - m) \\
+%& \ge \sum_{i \in \mathcal R \setminus \{r\}} (w_{i,r} - w_{i, r - 1})  (T^*_{i,r} - m)
+%\end{align*}
+%\end{proof}
 
 
 
