@@ -256,6 +256,87 @@ $$\sum_{i = 1}^n \sum_{j = i + 1}^n w_{ij} e_{ij} \ge \frac12 \sum_{i = 1}^n \su
 
 \end{proof}
 
+\subsection{Average-Linkage}
+\begin{theorem}\label{thm:average-linkage}
+For $d = 1$ under any monotone distance-based similarity measure $w_{ij} = g(x_i, x_j)$ the algorithm \textsc{Average Linkage} gives a $\frac12$-approximation for the objective $f^+$.
+\end{theorem}
+
+\begin{proof}
+For ease of notation from now on, for any two sets $A,B$, we denote $\sum_{i\in A,j\in B}w_{ij}$ by simply using $w_{AB}$.
+The proof is based on a potential function argument. We prove that at every step, \textsc{Average Linkage} gets at least $50\%$ of the total available potential.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=9cm]{merging}
+        	\caption{Illustration of how the merging process looks like in the 1-dimensional case.}
+\end{figure}
+
+We focus on a single step of \textsc{Average Linkage}, where neighboring clusters $A,B$ just got merged. As we see in the figure, let $C$ denote the nodes on the left of $A$ and $D$ denote the nodes on the right of $B$. Observe that $C,D$ may be empty sets. The initial total available potential is:
+\[
+\Phi_0 = (n-2)\sum_{e\in E}w_e
+\]
+ At a generic step of \textsc{Average Linkage}, by merging two clusters $A,B$, the difference in potential is:
+\[
+\Delta\Phi(A,B) = w_{AB}(|C|+|D|) + w_{AC}|B|+ w_{BD}|A| 
+\]
+
+By merging $A,B$, \textsc{Average Linkage} gains a contribution of:
+\[
+\textsc{Average Linkage}(A,B) = w_{AB}(|C|+|D|)
+\]
+
+However, after the merge, \textsc{Average Linkage} can no longer gain any contribution because of nodes in $B$ and edges between $A,C$ or because of nodes in $A$ and edges between $B,D$. More specifically, out of the total available potential at this step, $w_{AC}|B| + w_{BD}|A|$ is lost. We show that what \textsc{Average Linkage} gained at this step is no less than what \textsc{Average Linkage} lost, i.e.:
+\[
+w_{AB}(|C|+|D|) \ge w_{AC}|B| + w_{BD}|A|
+\]
+
+From the \textsc{Average Linkage} criterion:
+\[
+\dfrac{w_{AB}}{|A||B|}\ge \dfrac{w_{AC}}{|A||C|}\implies w_{AB}|C| \ge w_{AC}|B|
+\]
+\[
+\dfrac{w_{AB}}{|A||B|}\ge \dfrac{w_{BD}}{|B||D|}\implies w_{AB}|D| \ge w_{BD}|A|
+\]
+
+By summing up we get the desired inequality which means that:
+\[
+\textsc{Average Linkage}(A,B)\ge \dfrac12 \Delta\Phi(A,B)
+\]
+
+At the end of the merging process, the final potential $\Phi_{n-1} = 0$, so in total:
+\[
+\textsc{Average Linkage}\ge \dfrac12 (n-2)\sum_{e\in E}w_e\ge \dfrac12 OPT
+\]
+
+\end{proof}
+
+\section{Hierarchical Clustering in High Dimensions}
+The input is $v_1, \dots v_n \in \mathbb R^d$. Consider an algorithm which picks a random Gaussian vector $g \sim N_d(0,1)$, projects on it and then partitions the resulting points by uniformly random cuts. Here by a uniformly random cut we mean the following process. Let $x_i = \langle v_i, g \rangle$ and assume $x_1 \le \dots \le x_n$. Pick $y \sim U([x_1, x_n])$ and split the set of points into $L = \{i \colon x_i \le y\}$ and $R = \{i \colon x_i > y\}$, then apply the same algorithm recursively on $L$ and $R$.
+
+Fix any triangle $(v_i, v_j, v_k)$. Conditioned on cutting this triangle for the first time let $(p_{ij},p_{ik},p_{jk})$ be the vector of probabilities corresponding to the events that the corresponding edge is not cut. I.e. this is the probability that we score the contribution of this edge in the objective. Note that $p_{ij} + p_{ik} + p_{jk} = 1$.
+
+Conisder any triangle whose vertices are $v_i, v_j, v_k$. To simplify presentation we set $i = 1, j = 2, k = 3$. We can assume that $\|v_2 - v_1\| \ge \|v_2 - v_3\| \ge \|v_1 - v_3\|$. Let $\theta_1 = \widehat{v_1 - v_3, v_2 - v_3}$, $\theta_2 = \widehat{v_2 - v_1, v_3 - v_1}$ and $\theta_3 = \widehat{v_1 - v_2, v_3 - v_2}$ so that $\theta_1 \ge \theta_2 \ge \theta_3$.
+
+The probability that the $i$-the longest side of the triangle has the longest projection is then $\theta_i/\pi$. Conditioned on $(v_1, v_2)$ having the longest projection the probability of scoring the contribution of $(v_2, v_3)$ is given as:
+
+$$\frac{1}{\theta_1} \int_{0}^{\theta_1} \frac{\sin \theta}{\sin (\theta + \theta_2)} \frac{\sin (\theta_1 + \theta_2)}{\sin \theta_1} d\theta $$
+
+$$= \frac{\sin (\theta_1 + \theta_2)}{\theta_1 \sin \theta_1}\left(\theta_1 \cos \theta_2 + \ln\left(\frac{\sin \theta_2}{\sin (\theta_1 + \theta_2)}\right) \sin \theta_2 \right)$$
+
+Now consider the probability of scoring the contribution of $(v_1,v_3)$ conditioned on $(v_1,v_2)$ having the longest projection.
+We can express it as:
+$$\frac{1}{\theta_1} \int_0^{\theta_1} \frac{\sin \theta}{\sin (\theta + \theta_3)} \frac{\sin(\theta_1 + \theta_3)}{\sin \theta_1} d\theta$$
+
+It suffices to show that $\frac{\sin(\theta_1 + \theta_2)}{\sin (\theta + \theta_2)} \le \frac{\sin (\theta_1 + \theta_3)}{\sin (\theta + \theta_3)}$ for all $\theta \in [0, \theta_1]$.
+Since $\theta_1 = \pi - \theta_2 - \theta_3$ this is equivalent to:
+$$\frac{\sin\theta_3}{\sin (\theta + \theta_2)} \le \frac{\sin\theta_2}{\sin(\theta + \theta_3)}$$
+It suffices to show that:
+$$\sin\theta_3 \sin(\theta + \theta_3) \le \sin \theta_2 \sin (\theta + \theta_2)$$
+Using the formula $\sin \alpha \sin \beta = \frac12(\cos(\alpha - \beta) - \cos(\alpha + \beta))$ it suffices to show that:
+$$\cos(\theta + 2 \theta_3) \ge \cos(\theta + 2 \theta_2).$$
+The above inequality follows for all $\theta \in [0, \pi - \theta_2 - \theta_3]$ since $\theta_3 \le \theta_2$ .
+
+This shows that $p_{13}^{12} \ge p_{23}^{12}$. An analogous argument shows that $p_{13}^{23} \ge p_{12}^{23}$. Thus $p_{13} \ge \frac12 \frac{\theta_1 + \theta_2}{\pi} \ge \frac13$.
 
 \bibliographystyle{alpha}
 \bibliography{clustering}
